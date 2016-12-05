@@ -40,6 +40,30 @@ public class QueryParserTest {
         assertEquals(2, andLeft.evaluators.size());
     }
 
+    @Test public void testParseSpecialChar() throws Exception {
+        Evaluator eval = QueryParser.parse("#resultTable\\:0\\:resultListTableColumnTitle");
+        assertTrue(eval instanceof Evaluator.Id);
+        Evaluator.Id id = (Evaluator.Id) eval;
+        assertEquals("#resultTable:0:resultListTableColumnTitle", id.toString());
+        String specialQuery = "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\]\\^\\`\\{\\|\\}\\~";
+        eval = QueryParser.parse("#" + specialQuery);
+        assertTrue(eval instanceof Evaluator.Id);
+        id = (Evaluator.Id) eval;
+        String expected = "!\"#$%&'()*+,./:;<=>?@[]^`{|}~";
+        assertEquals("#" + expected, id.toString());
+        eval = QueryParser.parse("." + specialQuery);
+        assertTrue(eval instanceof Evaluator.Class);
+        assertEquals("." + expected, eval.toString());
+
+        eval = QueryParser.parse("div#" + specialQuery);
+        assertTrue(eval instanceof CombiningEvaluator);
+        assertEquals("div #" + expected, eval.toString());
+        eval = QueryParser.parse("div." + specialQuery);
+        assertTrue(eval instanceof CombiningEvaluator);
+        assertEquals("div ." + expected, eval.toString());
+
+    }
+
     @Test public void exceptionOnUncloseAttribute() {
         boolean threw = false;
         try {Evaluator parse = QueryParser.parse("section > a[href=\"");}

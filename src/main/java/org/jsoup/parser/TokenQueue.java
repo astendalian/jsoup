@@ -62,6 +62,16 @@ public class TokenQueue {
     }
 
     /**
+     * match css identifier special chars <br>
+     * see <a href=http://mathiasbynens.be/notes/css-escapes>css escape</a>
+     * @return  true if the css identifier special chars match
+     */
+    public boolean matchesCssSpecialChars(){
+        //!"#$%&'()*+,./:;<=>?@[\]^`{|}~
+        return matchesAny("\\:","\\#","\\!","\\\"","\\$","\\%","\\&","\\'","\\(","\\)","\\*","\\+","\\,","\\.","\\/","\\;","\\<","\\=","\\>","\\?","\\@",
+                "\\[","\\]","\\^","\\`","\\{","\\|","\\}","\\~");
+    }
+    /**
      * Tests if the next characters on the queue match the sequence. Case insensitive.
      * @param seq String to check queue for.
      * @return true if the next characters match.
@@ -359,16 +369,22 @@ public class TokenQueue {
     }
 
     /**
-     Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
+     Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _, \:)
      http://www.w3.org/TR/CSS2/syndata.html#value-def-identifier
      @return identifier
      */
     public String consumeCssIdentifier() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny('-', '_')))
+        boolean matchSpecialChar=false;
+        while (!isEmpty() && (matchesWord() || matchesAny('-', '_') || (matchSpecialChar=matchesCssSpecialChars()))) {
             pos++;
+            if (matchSpecialChar) {
+                pos++;
+                matchSpecialChar = false;
+            }
+        }
 
-        return queue.substring(start, pos);
+        return queue.substring(start, pos).replace("\\","");
     }
 
     /**
